@@ -278,3 +278,23 @@ fn test_sharp() {
         select.projection[0]
     );
 }
+
+#[test]
+fn parse_pg_binary_ops() {
+    let binary_ops = &[
+        (">>", BinaryOperator::PGBitwiseShiftRight, redshift()),
+        ("<<", BinaryOperator::PGBitwiseShiftLeft, redshift()),
+    ];
+
+    for (str_op, op, dialects) in binary_ops {
+        let select = dialects.verified_only_select(&format!("SELECT a {} b", &str_op));
+        assert_eq!(
+            SelectItem::UnnamedExpr(Expr::BinaryOp {
+                left: Box::new(Expr::Identifier(Ident::new("a"))),
+                op: op.clone(),
+                right: Box::new(Expr::Identifier(Ident::new("b"))),
+            }),
+            select.projection[0]
+        );
+    }
+}
